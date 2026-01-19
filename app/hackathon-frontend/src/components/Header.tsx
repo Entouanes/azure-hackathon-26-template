@@ -1,5 +1,4 @@
 import { Landmark } from 'lucide-react'
-import { LoginButton } from './LoginButton'
 
 export function Header() {
   return (
@@ -12,7 +11,6 @@ export function Header() {
         <p className='text-md font-bold'>Compliance Assessment Platform</p>
         <p className='text-muted-foreground font-mono'>v0.0.0</p>
       </div>
-        <LoginButton />
       </header>
     </div>
   )

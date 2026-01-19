@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useMsal } from '@azure/msal-react'
 import { deleteFile, listFiles, uploadFile } from '../lib/api'
-import { getToken } from '../lib/auth'
 import type { ReactNode } from 'react'
 
 export interface Document {
@@ -37,31 +35,24 @@ const DashboardContext = createContext<DashboardContextType | undefined>(
 )
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const { instance, accounts } = useMsal()
   const [documents, setDocuments] = useState<Array<Document>>([])
 
   useEffect(() => {
-    getToken(instance).then((token) => {
-      if (token) {
-        listFiles(token)
-          .then((files) => {
-            console.log("list_uploaded output:", files)
-            setDocuments(
-              files.map((name) => ({
-                id: name,
-                name,
-                size: '-',
-                date: '-',
-                status: 'ready',
-              })),
-            )
-          })
-          .catch(console.error)
-      } else {
-        setDocuments([])
-      }
-    })
-  }, [instance, accounts])
+    listFiles()
+      .then((files) => {
+        console.log("list_uploaded output:", files)
+        setDocuments(
+          files.map((name) => ({
+            id: name,
+            name,
+            size: '-',
+            date: '-',
+            status: 'ready',
+          })),
+        )
+      })
+      .catch(console.error)
+  }, [])
 
   const [history, setHistory] = useState<Array<HistoryItem>>([])
 
@@ -87,11 +78,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
     if (doc.status === 'ready') {
         try {
-            const token = await getToken(instance)
-            if (token) {
-                await deleteFile(doc.name, token);
-                setDocuments((prev) => prev.filter((d) => d.id !== id))
-            }
+            await deleteFile(doc.name);
+            setDocuments((prev) => prev.filter((d) => d.id !== id))
         } catch (error) {
             console.error("Failed to delete file", error);
             // Optionally show error
@@ -103,10 +91,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }
 
   const uploadDocument = async (file: File) => {
-    const token = await getToken(instance)
-    if (token) {
-        await uploadFile(file, token)
-    }
+    await uploadFile(file)
   }
 
   const addHistoryItem = (item: HistoryItem) => {
